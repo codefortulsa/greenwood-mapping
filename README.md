@@ -18,3 +18,5 @@ Throughout the two-year research process of writing the book, ***[The Victory of
 
 ## more information
  - Read the [article](https://codeforamerica.org/news/volunteer-spotlight-using-data-to-reveal-an-untold-story/) on Code for America’s blog about this project.
+ - Check out the project [Wiki](https://github.com/codefortulsa/greenwood-mapping/wiki).
+ - 
