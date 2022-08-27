@@ -1,0 +1,62 @@
+version: '3.8'
+services:
+  # App
+  app:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    environment:
+      DATABASE_URL: postgis://postgres:postgres@greenwood_history-db/greenwood_history
+      CACHE_URL: django-redis://greenwood_history-redis/0
+      DJANGO_CONFIGURATION: Dev
+    networks:
+      - greenwood_history
+    volumes:
+      - ../greenwood_history:/app/greenwood_history:cached
+    env_file: .env
+    links:
+      - db
+      - redis
+    depends_on:
+      - db
+      - redis
+    # network_mode: service:db
+    command: poetry run ./manage.py runserver 0.0.0.0:8000
+  # Databases
+  db:
+    restart: unless-stopped
+    image: postgis/postgis:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: greenwood_history
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - db-volume:/var/lib/postgresql/data
+    # env_file: .env
+    # Add "forwardPorts": ["5432"] to **devcontainer.json** to forward PostgreSQL locally.
+    # (Adding the "ports" property to this file will not forward from a Codespace.)
+    ports:
+      - 5432:5432
+      - 5433:5433
+    networks:
+      greenwood_history:
+        aliases:
+          - greenwood_history-db
+  redis:
+    image: redis:latest
+    ports:
+      - 6379:6379
+    networks:
+      greenwood_history:
+        aliases:
+          - greenwood_history-redis
+
+volumes:
+  db-volume:
+    name: greenwood_history_db-volume
+
+networks:
+  greenwood_history:
+    name: greenwood_history-net
+    driver: bridge
