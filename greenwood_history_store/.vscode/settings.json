@@ -1,0 +1,9 @@
+{
+    "search.exclude": {
+        "**/.cache": true,
+        "**/.venv": true
+    },
+    "python.analysis.extraPaths": [
+        "./greenwood_history/apps"
+    ]
+}

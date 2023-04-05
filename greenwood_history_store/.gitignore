@@ -103,7 +103,6 @@ venv.bak/
 
 #Editor
 .vim/
-.vscode/
 
 # node
 node_modules
