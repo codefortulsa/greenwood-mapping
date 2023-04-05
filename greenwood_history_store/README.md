@@ -10,3 +10,16 @@ Prerequisites:
 * [Docker desktop](https://www.docker.com/products/docker-desktop/)
 * [Vscode](https://code.visualstudio.com/)
   * with [Remote - Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension installed
+* Parcel and addresses data
+  * both have objectid property, do they change?
+
+## MVP Interface needs
+  Be able to click on a point (What is a point? addresses? POI?)
+  Possibly clicking on a block boundary and seeing all related data inside it over the years and list of losses.
+  1920 census data
+  what we know about a place over time
+
+Polk data is in the upload files version directory, need to import and make relations to addresses and 
+
+## MVP Backend needs
+* Import all the data from the polk data

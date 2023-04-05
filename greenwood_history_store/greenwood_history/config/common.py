@@ -24,8 +24,10 @@ logger = logging.getLogger(__name__)
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.append(join(BASE_DIR, "apps"))
+sys.path.append(join(BASE_DIR, "utils"))
 
 # monkey patch new django redis backend
+# monkey patch new django redis backend, can be removed once django_cache_url updates
 BACKENDS.update({"django-redis": "django.core.cache.backends.redis.RedisCache"})
 
 
@@ -64,11 +66,14 @@ class Common(Configuration):
     )
 
     THIRD_PARTY_APPS = (
+        "rest_framework",
     )
 
     LOCAL_APPS = (
-        "plots",
-        "people"
+        "addresses",
+        "buildings",
+        "entities",
+        # "plots",
     )
 
     # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -271,3 +276,7 @@ class Common(Configuration):
     # fmt: on
     # END LOGGING CONFIGURATION
 
+    REST_FRAMEWORK = {
+        'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+        'PAGE_SIZE': 10
+    }

@@ -6,13 +6,13 @@ services:
       context: ..
       dockerfile: .devcontainer/Dockerfile
     environment:
-      DATABASE_URL: postgis://postgres:postgres@greenwood_history-db/greenwood_history
-      CACHE_URL: django-redis://greenwood_history-redis/0
+      DATABASE_URL: postgis://postgres:postgres@db/greenwood_history
+      CACHE_URL: django-redis://redis/0
       DJANGO_CONFIGURATION: Dev
     networks:
       - greenwood_history
     volumes:
-      - ../greenwood_history:/app/greenwood_history:cached
+      - ..:/app:cached
     env_file: .env
     links:
       - db
@@ -21,11 +21,11 @@ services:
       - db
       - redis
     # network_mode: service:db
-    command: poetry run ./manage.py runserver 0.0.0.0:8000
+    command: sleep infinity
   # Databases
   db:
     restart: unless-stopped
-    image: postgis/postgis:latest
+    image: postgis/postgis:14-master
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
