@@ -11,4 +11,5 @@ class StreetAdmin(admin.ModelAdmin):
 
 @admin.register(Address)
 class AddressAdmin(admin.ModelAdmin):
-    pass
+    list_display = ("number", "number_additional", "street")
+    list_filter = ("number_additional", "street")

@@ -8,5 +8,6 @@ class EntityViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows Entitys to be viewed or edited.
     """
+
     queryset = Entity.objects.all()
     serializer_class = EntitySerializer

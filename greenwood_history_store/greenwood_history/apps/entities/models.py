@@ -8,12 +8,12 @@ from nameparser import HumanName
 
 # A person can belong to many addresses
 # meta: age, occupation, notes, full name, occupation
-# class 
+# class
 
 # A business
 
 
-# How to accomplish history? Maybe residential history 
+# How to accomplish history? Maybe residential history
 # It looks like we have yearly granularity at the moment.
 
 # import null values
@@ -40,8 +40,7 @@ jobs = [
     "shoesh",
     "garage",
     "real estate",
-    "real est."
-    "shoemaker",
+    "real est." "shoemaker",
     "contracto",
     "photo",
     "confectioner",
@@ -70,6 +69,9 @@ class Entity(PolymorphicModel):
     name = models.CharField(max_length=120)
     meta = models.JSONField(default=dict, blank=True)
     canonical = models.ForeignKey("self", null=True, blank=True, on_delete=models.SET_NULL)
+
+    class Meta:
+        ordering = ("-id",)
 
     def __str__(self) -> str:
         return self.name
@@ -114,6 +116,7 @@ class Event(models.Model):
 
 def import_entity(item):
     pass
+
 
 """
 unique Id to call back and refer back to an entity that changes over time.

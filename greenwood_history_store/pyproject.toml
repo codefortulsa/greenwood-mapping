@@ -17,12 +17,18 @@ nameparser = "^1.1.1"
 psycopg2 = "^2.9.5"
 djangorestframework = "^3.14.0"
 bonobo = "^0.6.4"
+djangorestframework-gis = "^1.0"
+django-extensions = "^3.2.1"
+django-filter = "^23.1"
+adrf = "^0.1.1"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 black = "^22.6.0"
-pytest = "^7.1.2"
 isort = "^5.10.1"
 pdbr = "^0.7.2"
+pytest = "^7.2.2"
+pytest-django = {git = "https://github.com/pytest-dev/pytest-django.git"}
+ipykernel = "^6.22.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -50,3 +56,8 @@ store_history=".pdbr_history"
 style = "yellow"
 use_traceback = true
 theme = "friendly"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "greenwood_history.config"
+DJANGO_CONFIGURATION = "Test"
+python_files = ["test_*.py", "*_test.py", "testing/python/*.py"]

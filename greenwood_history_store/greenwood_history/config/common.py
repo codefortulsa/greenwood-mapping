@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.append(join(BASE_DIR, "apps"))
-sys.path.append(join(BASE_DIR, "utils"))
+# sys.path.append(join(BASE_DIR, "utils"))
 
 # monkey patch new django redis backend
 # monkey patch new django redis backend, can be removed once django_cache_url updates
@@ -32,7 +32,6 @@ BACKENDS.update({"django-redis": "django.core.cache.backends.redis.RedisCache"})
 
 
 class Common(Configuration):
-
     BASE_DIR = BASE_DIR
 
     # SECRET CONFIGURATION
@@ -66,7 +65,10 @@ class Common(Configuration):
     )
 
     THIRD_PARTY_APPS = (
+        "django_extensions",
+        "django_filters",
         "rest_framework",
+        "rest_framework_gis",
     )
 
     LOCAL_APPS = (
@@ -277,6 +279,6 @@ class Common(Configuration):
     # END LOGGING CONFIGURATION
 
     REST_FRAMEWORK = {
-        'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-        'PAGE_SIZE': 10
+        "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+        "PAGE_SIZE": 10,
     }
