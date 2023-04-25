@@ -88,6 +88,7 @@ class Street(models.Model):
     direction = models.CharField(
         _("Direction"), max_length=1, blank=True, null=True, choices=Directions.choices
     )
+    # Polygon for street?
 
     def __str__(self) -> str:
         return f"{self.name} {silent(StreetTypes, self.type)} {silent(Directions, self.direction)}".strip()
@@ -144,5 +145,4 @@ class Address(models.Model):
             street=street, number=split_number, number_additional=letters, defaults=kwargs
         )
 
-
-outline = models.PolygonField(_("Outline"), blank=True, null=True)
+        # outline = models.PolygonField(_("Outline"), blank=True, null=True)

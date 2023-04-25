@@ -20,6 +20,7 @@ djangorestframework-gis = "^1.0"
 django-extensions = "^3.2.1"
 django-filter = "^23.1"
 adrf = "^0.1.1"
+petl = "^1.7.12"
 
 [tool.poetry.group.dev.dependencies]
 black = "^22.6.0"
@@ -28,6 +29,7 @@ pdbr = "^0.7.2"
 pytest = "^7.2.2"
 pytest-django = {git = "https://github.com/pytest-dev/pytest-django.git"}
 ipykernel = "^6.22.0"
+setuptools = "^67.6.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
