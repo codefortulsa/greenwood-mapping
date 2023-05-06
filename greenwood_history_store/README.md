@@ -23,3 +23,14 @@ Polk data is in the upload files version directory, need to import and make rela
 
 ## MVP Backend needs
 * Import all the data from the polk data
+* Add pg-history to track changes to imported data.
+* Add a canonical ref for entities?
+* How to track entities that are named differently or import data that need.
+
+# TODO
+How to deal with GIS?
+Setup github actions to run django tests.
+
+# Questions
+* integrations with arcGIS?
+  * Use arcGIs for most of the application? mapping interaction?

@@ -16,7 +16,7 @@
             "justMyCode": true
         },
         {
-            "name": "Python: Django",
+            "name": "Django - runserver",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/manage.py",
@@ -27,6 +27,18 @@
             "django": true,
             "justMyCode": false,
             "console": "integratedTerminal"
-        }
+        },
+        {
+            "name": "Django - migrate",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/manage.py",
+            "args": [
+                "migrate"
+            ],
+            "django": true,
+            "justMyCode": false,
+            "console": "integratedTerminal"
+        },
     ]
 }

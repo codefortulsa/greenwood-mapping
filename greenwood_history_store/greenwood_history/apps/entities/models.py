@@ -68,7 +68,8 @@ do you just check that there is an existed event before a destroyed event and th
 class Entity(PolymorphicModel):
     name = models.CharField(max_length=120)
     meta = models.JSONField(default=dict, blank=True)
-    canonical = models.ForeignKey("self", null=True, blank=True, on_delete=models.SET_NULL)
+    canonical = models.ForeignKey(
+        "self", null=True, blank=True, on_delete=models.SET_NULL)
 
     class Meta:
         ordering = ("-id",)
@@ -114,12 +115,12 @@ class Event(models.Model):
     type = models.CharField(max_length=2)
 
 
-def import_entity(item):
-    pass
-
-
 """
 unique Id to call back and refer back to an entity that changes over time.
 Start with a simple event structure, not too complex.
 streets names changes
 """
+# Should this be another polymorphic bit of data?
+# Artifacts ( images, other documents )
+
+# PrimarySource ( flexible, person, land deed )
