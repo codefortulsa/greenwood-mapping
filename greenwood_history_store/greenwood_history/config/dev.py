@@ -11,7 +11,6 @@ from .common import Common
 
 
 class Dev(Common):
-
     # DEBUG
     DEBUG = values.BooleanValue(True)
     TEMPLATE_DEBUG = DEBUG
@@ -27,6 +26,6 @@ class Dev(Common):
     EMAIL_BACKEND = values.Value("django.core.mail.backends.console.EmailBackend")
     # End mail settings
 
-    MIDDLEWARE = Common.MIDDLEWARE + [
-        "pdbr.middlewares.django.PdbrMiddleware",
-    ]
+    # MIDDLEWARE = Common.MIDDLEWARE + [
+    #     "pdbr.middlewares.django.PdbrMiddleware",
+    # ]

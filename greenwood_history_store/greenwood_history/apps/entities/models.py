@@ -1,91 +1,68 @@
-from email.policy import default
 from typing import Optional
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from polymorphic.models import PolymorphicModel
 from nameparser import HumanName
+import pgtrigger
+import pghistory
 
 
-# A person can belong to many addresses
-# meta: age, occupation, notes, full name, occupation
-# class
-
-# A business
-
-
-# How to accomplish history? Maybe residential history
-# It looks like we have yearly granularity at the moment.
-
-# import null values
-# "address not listed",
-# "not listed",
-# "street not listed",  # could mean street is gone or destroyed or didn't exist yet.
-# job mapping
-jobs = [
-    "grocer",
-    "grocers",
-    "tailors",
-    "physician",
-    "restaurant",
-    "restaura",
-    "resta",
-    "laywer",
-    "dressma",
-    "softdr",
-    "phsici",
-    "laundry",
-    "barber",
-    "tailor",
-    "shoeshiner",
-    "shoesh",
-    "garage",
-    "real estate",
-    "real est." "shoemaker",
-    "contracto",
-    "photo",
-    "confectioner",
-    "confec.",
-    "conf",
-    "druggist",
-    "physician",
-    "physic",
-    "dentist",
-    "plumber",
-    "fumi",
-    "bulliards",
-    "cleane",
-    "cleaner",
-    "cleaners",
-]
-
-"""
-A history item that logs when a state changes for a given entity. start stop dates or just a date records and type?
-What would the query look like to capture a date that exists between two dates?  say you ask if it existed, 
-do you just check that there is an existed event before a destroyed event and then allow that result to show up?
-"""
-
-
+@pghistory.track(
+    pghistory.Snapshot(),
+    model_name="EntityEvent",
+    fields=("name", "meta", "canonical"),
+    context_field=pghistory.ContextForeignKey(related_query_name="entity_events"),
+)
 class Entity(PolymorphicModel):
+    active = models.BooleanField(default=True)
     name = models.CharField(max_length=120)
     meta = models.JSONField(default=dict, blank=True)
-    canonical = models.ForeignKey(
-        "self", null=True, blank=True, on_delete=models.SET_NULL)
+    canonical = models.ForeignKey("self", null=True, blank=True, on_delete=models.SET_NULL)
 
     class Meta:
         ordering = ("-id",)
+        # TODO: trigger to manage only updating canonical and restricts to only updates if canonical
+        # is not set on the target, canonical also must be on the same type only.
+        triggers = [
+            pgtrigger.ReadOnly(name="read_only_fields", fields=["name"]),
+            pgtrigger.Protect(name="protect_deletes", operation=pgtrigger.Delete),
+        ]
+        verbose_name_plural = "entities"
 
     def __str__(self) -> str:
         return self.name
 
+    # def record_losses(self):
+    #     pass
 
+
+@pghistory.track(
+    pghistory.Snapshot(),
+    model_name="PersonEvent",
+    fields=("name_parsed",),
+    context_field=pghistory.ContextForeignKey(related_query_name="person_events"),
+)
 class Person(Entity):
+    """Entity that represents a unique person."""
+
     _parsed_name_field = "parsed_name"
-    "Handles name parsing and job + relations."
-    name_parsed = models.BooleanField(default=True)
+    name_parsed = models.BooleanField(default=False)
+
+    @property
+    def full_name(self):
+        name_meta = self.meta.get(self._parsed_name_field)
+        return f'{name_meta.get("first")} {name_meta.get("last")}'
 
     def update_name_meta(self, name: Optional[HumanName] = None):
         if name is None:
             name = HumanName(self.name)
+        self.meta.update({self._parsed_name_field: name.as_dict()})
+        return self
+
+    def update_name_meta_from_parts(self, **parts):
+        # first=None, middle=None, last=None, title=None, suffix=None
+        # HumanName._members
+        name = HumanName(**parts)
         self.meta.update({self._parsed_name_field: name.as_dict()})
         return self
 
@@ -98,29 +75,18 @@ class Person(Entity):
         self.update_name_meta(name)
         return name
 
-    # TODO: human name object from meta?
+    def save(self, *args, **kwargs):
+        # Temp, update meta name data on save.
+        self.update_name_meta()
+        self.name_parsed = True
+        super().save(*args, **kwargs)
 
 
+@pghistory.track(
+    pghistory.Snapshot(),
+    model_name="BusinessEvent",
+    fields=("proprietor",),
+    context_field=pghistory.ContextForeignKey(related_query_name="person_events"),
+)
 class Business(Entity):
-    pass
-
-
-class EventType(models.TextChoices):
-    LOST = "L", _("Lost")
-    NOT_LISTED = "NL", _("Not listed")
-
-
-class Event(models.Model):
-    date = models.DateField()
-    type = models.CharField(max_length=2)
-
-
-"""
-unique Id to call back and refer back to an entity that changes over time.
-Start with a simple event structure, not too complex.
-streets names changes
-"""
-# Should this be another polymorphic bit of data?
-# Artifacts ( images, other documents )
-
-# PrimarySource ( flexible, person, land deed )
+    proprietor = models.ForeignKey(Person, null=True, blank=True, on_delete=models.SET_NULL)

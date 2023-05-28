@@ -54,6 +54,7 @@ class Common(Configuration):
 
     # APP CONFIGURATION
     DJANGO_APPS = (
+        "pghistory.admin",
         "django.contrib.admin",
         "django.contrib.auth",
         "django.contrib.contenttypes",
@@ -69,13 +70,16 @@ class Common(Configuration):
         "django_filters",
         "rest_framework",
         "rest_framework_gis",
+        "pghistory",
+        "pgtrigger",
+        # "pgconnection",
     )
 
     LOCAL_APPS = (
         "addresses",
         "buildings",
         "entities",
-        # "plots",
+        "shapes",
     )
 
     # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -281,4 +285,8 @@ class Common(Configuration):
     REST_FRAMEWORK = {
         "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
         "PAGE_SIZE": 10,
+        "DEFAULT_FILTER_BACKENDS": [
+            "django_filters.rest_framework.DjangoFilterBackend",
+            "rest_framework.filters.SearchFilter",
+        ],
     }

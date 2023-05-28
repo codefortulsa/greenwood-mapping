@@ -1,7 +1,7 @@
 from rest_framework import viewsets
 
 from .models import Entity
-from .serializers import EntitySerializer
+from .serializers import EntityPolymorphicSerializer
 
 
 class EntityViewSet(viewsets.ModelViewSet):
@@ -10,4 +10,4 @@ class EntityViewSet(viewsets.ModelViewSet):
     """
 
     queryset = Entity.objects.all()
-    serializer_class = EntitySerializer
+    serializer_class = EntityPolymorphicSerializer

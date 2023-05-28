@@ -6,7 +6,12 @@ services:
       context: ..
       dockerfile: .devcontainer/Dockerfile
     environment:
-      DATABASE_URL: postgis://postgres:postgres@db/greenwood_history
+      DATABASE_URL: postgis://postgres:postgres@db:5432/greenwood_history
+      PGHOST: db
+      PGPORT: "5432"
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: greenwood_history
       CACHE_URL: django-redis://redis/0
       DJANGO_CONFIGURATION: Dev
     networks:
