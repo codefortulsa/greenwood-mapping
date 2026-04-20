@@ -150,8 +150,62 @@ class Address(models.Model):
             street=street, number=split_number, number_additional=letters, defaults=kwargs
         )
 
-        # outline = models.PolygonField(_("Outline"), blank=True, null=True)
 
+class AddressHistoryEvent(models.Model):
+    """An event that transforms one address into another.
 
-# class Plot(models.Model):
-#     outline = models.PolygonField(_("Outline"), blank=True, null=True)
+    Events chain: from_address -> to_address, dated at `effective_date`,
+    with a machine-readable `reason`. Walk the chain to resolve a
+    historical address to its modern equivalent (and to tell the story
+    along the way).
+
+    Either endpoint may be null: null `from_address` = "address appeared
+    from nothing" (new construction), null `to_address` = "address
+    ceased to exist" (destruction, demolition, land reassigned).
+    """
+
+    class Reason(models.TextChoices):
+        REBUILT_1921 = "rebuilt_1921", _("Post-massacre rebuild (1921)")
+        URBAN_RENEWAL = "urban_renewal", _("Urban Renewal")
+        IDL_CONSTRUCTION = "idl_construction", _("I-244 / IDL construction")
+        STREET_RENAMED = "street_renamed", _("Street renamed")
+        ROUTINE_RENUMBERING = "routine_renumbering", _("Routine renumbering")
+        DESTROYED = "destroyed", _("Destroyed")
+        NEW_CONSTRUCTION = "new_construction", _("New construction")
+        OTHER = "other", _("Other")
+
+    from_address = models.ForeignKey(
+        Address,
+        related_name="outgoing_history_events",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+    )
+    to_address = models.ForeignKey(
+        Address,
+        related_name="incoming_history_events",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+    )
+    effective_date = models.DateField(_("Effective date"))
+    reason = models.CharField(_("Reason"), max_length=32, choices=Reason.choices)
+    source_document = models.CharField(_("Source document"), max_length=255, blank=True)
+    notes = models.TextField(_("Notes"), blank=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["effective_date"]),
+            models.Index(fields=["reason"]),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(from_address__isnull=False) | models.Q(to_address__isnull=False),
+                name="address_history_has_at_least_one_endpoint",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        src = str(self.from_address) if self.from_address_id else "∅"
+        dst = str(self.to_address) if self.to_address_id else "∅"
+        return f"{src} → {dst} ({self.get_reason_display()}, {self.effective_date})"

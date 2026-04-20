@@ -25,7 +25,6 @@ django-pghistory = "^3.9"
 django-pgtrigger = "^4.17"
 django-rest-polymorphic = "^0.1.10"
 psycopg = {version = "^3.3", extras = ["binary"]}
-python-dateutil = "^2.9"
 
 [tool.poetry.group.dev.dependencies]
 black = "^26"

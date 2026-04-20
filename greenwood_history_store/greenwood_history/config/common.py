@@ -79,6 +79,7 @@ class Common(Configuration):
         "entities",
         "time_ranges",
         "shapes",
+        "overlays",
     )
 
     # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps

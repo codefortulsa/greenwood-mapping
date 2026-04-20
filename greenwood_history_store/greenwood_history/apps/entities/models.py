@@ -1,4 +1,6 @@
 from typing import Optional
+
+from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from polymorphic.models import PolymorphicModel
@@ -87,3 +89,72 @@ class Person(Entity):
 )
 class Business(Entity):
     proprietor = models.ForeignKey(Person, null=True, blank=True, on_delete=models.SET_NULL)
+
+
+class EntityMerge(models.Model):
+    """Audit row for a soft-merge: absorbed entity -> surviving entity.
+
+    The absorbed entity keeps all of its relationships — merging just
+    sets `Entity.canonical` to the survivor and flips `Entity.active`
+    to False on the loser. `Entity` deletes are blocked by pgtrigger,
+    so no data goes away.
+
+    Reverting clears `canonical`, re-activates the loser, and flips
+    `status` to REVERTED. A single entity can only have one ACTIVE
+    merge event; the UniqueConstraint enforces it.
+    """
+
+    class Status(models.TextChoices):
+        ACTIVE = "active", _("Active")
+        REVERTED = "reverted", _("Reverted")
+
+    surviving_entity = models.ForeignKey(
+        Entity,
+        related_name="absorbed_merges",
+        on_delete=models.PROTECT,
+    )
+    merged_entity = models.ForeignKey(
+        Entity,
+        related_name="merge_event",
+        on_delete=models.PROTECT,
+    )
+    reason = models.TextField(_("Reason"), blank=True)
+
+    performed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="entity_merges_performed",
+        on_delete=models.PROTECT,
+    )
+    performed_at = models.DateTimeField(auto_now_add=True)
+
+    status = models.CharField(
+        _("Status"),
+        max_length=10,
+        choices=Status.choices,
+        default=Status.ACTIVE,
+    )
+    reverted_at = models.DateTimeField(null=True, blank=True)
+    reverted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="entity_merges_reverted",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["merged_entity"],
+                condition=models.Q(status="active"),
+                name="only_one_active_merge_per_entity",
+            ),
+            models.CheckConstraint(
+                condition=~models.Q(surviving_entity=models.F("merged_entity")),
+                name="cannot_merge_entity_into_itself",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        arrow = "→" if self.status == self.Status.ACTIVE else "↩"
+        return f"{self.merged_entity} {arrow} {self.surviving_entity} ({self.status})"

@@ -28,7 +28,9 @@ WORKDIR /app
 
 # Copy lockfiles first so dep install is cached until pyproject.toml / poetry.lock change
 COPY pyproject.toml poetry.lock ./
-RUN poetry install --no-root --only main
+# Install all groups (main + dev) so tests/format/lint work out of the box.
+# Prod builds should switch this to `--only main` in a separate stage.
+RUN poetry install --no-root
 
 # Copy app code
 COPY . .

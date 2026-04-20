@@ -1,20 +1,30 @@
 from datetime import datetime
 
 from django.db import models
+from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
-from entities.models import Entity
+
 from addresses.models import Address
+from core.mixins import FuzzyDateRangeMixin
+from entities.models import Entity
 
 
 class TimeRangeQuerySet(models.QuerySet):
     def date_in(self, date: datetime) -> "TimeRangeQuerySet":
-        return self.filter(start_time__lte=date, end_time__gte=date)
+        """Return ranges whose (fuzzy) window contains `date`.
+
+        Uses the widest interpretation: the date must be >= the earliest
+        start and <= the latest end (nulls treated as open-ended).
+        """
+        return self.filter(
+            Q(start_earliest__isnull=True) | Q(start_earliest__lte=date),
+        ).filter(
+            Q(end_latest__isnull=True) | Q(end_latest__gte=date),
+        )
 
 
-class TimeRange(models.Model):
+class TimeRange(FuzzyDateRangeMixin, models.Model):
     name = models.CharField(_("Name"), max_length=120, unique=True)
-    start_time = models.DateTimeField()
-    end_time = models.DateTimeField()
 
     entities = models.ManyToManyField(
         Entity,
@@ -26,11 +36,14 @@ class TimeRange(models.Model):
     objects = TimeRangeQuerySet.as_manager()
 
     def __str__(self) -> str:
-        return f"{self.name} {self.start_time:%Y-%m-%d} {self.end_time:%Y-%m-%d}"
+        start = self.start_earliest.date() if self.start_earliest else "?"
+        end = self.end_latest.date() if self.end_latest else "?"
+        return f"{self.name} {start} — {end}"
 
 
-# TODO: rename to something simpler
 class EntityAddressTimeRangeThrough(models.Model):
+    """(entity × address × time_range) join — who lived/worked where, when."""
+
     entity = models.ForeignKey(Entity, on_delete=models.CASCADE)
     address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True)
     time_range = models.ForeignKey(TimeRange, on_delete=models.CASCADE)
@@ -39,4 +52,4 @@ class EntityAddressTimeRangeThrough(models.Model):
         unique_together = ("entity", "time_range", "address")
 
     def __str__(self) -> str:
-        return f"{self.entity} {self.address} {self.time_range}"
+        return f"{self.entity} @ {self.address} during {self.time_range}"
