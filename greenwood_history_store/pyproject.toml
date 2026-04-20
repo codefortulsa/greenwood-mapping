@@ -7,14 +7,13 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-Django = "^4.1"
+Django = "^4.2"
 django-configurations = {version = "^2.3.2", extras = ["cache", "database", "email", "search"]}
 rich = "^12.5.1"
 pydantic = "^1.9.2"
 django-pydantic-field = "^0.2.3"
 django-polymorphic = "^3.1.0"
 nameparser = "^1.1.1"
-psycopg2 = "^2.9.5"
 djangorestframework = "^3.14.0"
 djangorestframework-gis = "^1.0"
 django-extensions = "^3.2.1"
@@ -24,6 +23,7 @@ asyncer = "^0.0.2"
 petl = {version = "^1.7.12", extras = ["xlsx"]}
 django-pghistory = "^2.7.0"
 django-rest-polymorphic = "^0.1.10"
+psycopg2 = "^2.9.7"
 
 [tool.poetry.group.dev.dependencies]
 black = "^22.6.0"

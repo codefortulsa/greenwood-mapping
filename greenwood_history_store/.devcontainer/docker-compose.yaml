@@ -14,8 +14,8 @@ services:
       PGDATABASE: greenwood_history
       CACHE_URL: django-redis://redis/0
       DJANGO_CONFIGURATION: Dev
-    networks:
-      - greenwood_history
+    # networks:
+    #   - greenwood_history
     volumes:
       - ..:/app:cached
     env_file: .env
@@ -44,24 +44,24 @@ services:
     ports:
       - 5432:5432
       - 5433:5433
-    networks:
-      greenwood_history:
-        aliases:
-          - greenwood_history-db
+    # networks:
+    #   greenwood_history:
+    #     aliases:
+    #       - greenwood_history-db
   redis:
     image: redis:latest
     ports:
       - 6379:6379
-    networks:
-      greenwood_history:
-        aliases:
-          - greenwood_history-redis
+    # networks:
+    #   greenwood_history:
+    #     aliases:
+    #       - greenwood_history-redis
 
 volumes:
   db-volume:
     name: greenwood_history_db-volume
 
-networks:
-  greenwood_history:
-    name: greenwood_history-net
-    driver: bridge
+# networks:
+#   greenwood_history:
+#     name: greenwood_history-net
+#     driver: bridge
