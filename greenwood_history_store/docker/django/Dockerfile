@@ -1,3 +1,12 @@
+# Multi-stage Dockerfile.
+#   base  — shared system deps + runtime tooling (no python deps yet)
+#   dev   — installs all poetry groups; runs Django runserver with reload
+#
+# A `prod` stage will be added later with --only main + uvicorn. The
+# compose file selects the target explicitly (`build.target: dev`) so
+# production can drop in without touching the dev path.
+
+# ---------------------------------------------------------------- base
 FROM python:3.13-slim-bookworm AS base
 
 ENV PYTHONFAULTHANDLER=1 \
@@ -21,21 +30,22 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
       gettext \
  && rm -rf /var/lib/apt/lists/*
 
-# Install Poetry in a dedicated location so it's not on the app venv
 RUN pip install --no-cache-dir "poetry==2.2.0"
 
 WORKDIR /app
 
-# Copy lockfiles first so dep install is cached until pyproject.toml / poetry.lock change
 COPY pyproject.toml poetry.lock ./
-# Install all groups (main + dev) so tests/format/lint work out of the box.
-# Prod builds should switch this to `--only main` in a separate stage.
+
+# ---------------------------------------------------------------- dev
+FROM base AS dev
+
+# All groups (main + dev) so pytest / black / isort / ipykernel are
+# available in the image. Bind-mount at runtime gives hot reload via
+# Django's runserver.
 RUN poetry install --no-root
 
-# Copy app code
 COPY . .
 
-# Dev start script
 COPY docker/django/start.sh /usr/local/bin/start
 RUN chmod +x /usr/local/bin/start
 

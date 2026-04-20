@@ -5,7 +5,8 @@ services:
     build:
       context: .
       dockerfile: docker/django/Dockerfile
-    image: greenwood-app:local
+      target: dev
+    image: greenwood-app:dev
     container_name: greenwood_app
     restart: unless-stopped
     depends_on:
