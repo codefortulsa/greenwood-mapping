@@ -1,0 +1,133 @@
+set shell := ["bash", "-uc"]
+set dotenv-load := true
+
+# Default command: list available recipes.
+default:
+    @just --list
+
+# -- Docker lifecycle -------------------------------------------------
+
+# Build all container images.
+build:
+    docker compose build
+
+# Start the full stack in the background.
+up:
+    docker compose up -d --remove-orphans
+
+# Stop all containers (keeps volumes).
+down:
+    docker compose down
+
+# Stop containers AND drop volumes. Destructive — prompts before running.
+prune:
+    @printf "\033[31mThis drops all DB data. Continue? [y/N] \033[0m" && \
+      read -r ans && [[ "$ans" =~ ^[Yy]$ ]] && \
+      docker compose down -v || echo "aborted"
+
+# Show service status.
+ps:
+    docker compose ps
+
+# Tail service logs (e.g. `just logs app` or `just logs`).
+logs *args:
+    docker compose logs -f {{ args }}
+
+# Restart a service (or all if none given).
+restart *args:
+    docker compose restart {{ args }}
+
+# -- Django inner loop -----------------------------------------------
+
+# Run a manage.py command in a fresh app container.
+# Example: `just manage makemigrations addresses`
+manage +args:
+    docker compose run --rm app python manage.py {{ args }}
+
+# Run Django migrations.
+migrate:
+    @just manage migrate
+
+# Django shell_plus (via django-extensions).
+shell:
+    @just manage shell_plus
+
+# Open a psql shell against the dev database.
+db-shell:
+    docker compose exec db psql -U postgres -d greenwood_history
+
+# Execute an arbitrary command in a fresh app container.
+# Example: `just exec bash` or `just exec poetry show --tree`
+exec +args:
+    docker compose run --rm app {{ args }}
+
+# -- Quality / tests --------------------------------------------------
+
+# Run pytest (pass extra args: `just test -k parse_street`).
+test *args:
+    docker compose run --rm app pytest {{ args }}
+
+# Format with black + isort.
+format:
+    docker compose run --rm app bash -c "black . && isort ."
+
+# Lint check (no fixes).
+lint:
+    docker compose run --rm app bash -c "black --check . && isort --check-only ."
+
+# -- Data pipelines ---------------------------------------------------
+
+# Load county shapefiles into unmanaged PostGIS tables via shp2pgsql.
+# Requires shp2pgsql on the HOST (brew install postgis) because it
+# streams straight into the db container's psql.
+import-shapes:
+    @echo "Loading parcels, quarters, townships shapefiles..."
+    shp2pgsql -d -D -I data/shape/Parcels_20220929/PARCELS220929.shp parcels | \
+      docker compose exec -T db psql -U postgres -d greenwood_history
+    shp2pgsql -d -D -I data/shape/Quarters/quarter.shp quarters | \
+      docker compose exec -T db psql -U postgres -d greenwood_history
+    shp2pgsql -d -D -I data/shape/Township/township.shp townships | \
+      docker compose exec -T db psql -U postgres -d greenwood_history
+
+# QUICK CONTRIBUTOR BOOTSTRAP: spin up a seeded dev DB in ~30s.
+# Does NOT re-run the import pipeline — loads pre-curated fixtures.
+bootstrap:
+    docker compose up -d db redis
+    @just manage migrate
+    @if compgen -G "seeds/relational/*.json" > /dev/null; then \
+        just manage loaddata seeds/relational/*.json; \
+    else \
+        echo "No seeds yet — run \`just reimport\` or wait for seeds/ to be curated."; \
+    fi
+    @if compgen -G "seeds/spatial/*.sql" > /dev/null; then \
+        for f in seeds/spatial/*.sql; do \
+          docker compose exec -T db psql -U postgres -d greenwood_history < "$f"; \
+        done; \
+    fi
+
+# FULL RE-IMPORT FROM RAW SOURCES. Wipes the DB first. Slow.
+# Use this when import logic changes or you add new source data.
+reimport: prune
+    docker compose up -d db redis
+    @just manage migrate
+    @just import-shapes
+    # Polk xlsx import — add once the pipeline is fixed
+    # @just manage import_polk
+    @just manage import_data
+    # GeoJSON overlays — add once the management command lands
+    # @just manage import_geojson data/greenwood_assets/
+
+# Export curated DB state back to seeds/. Commit the diff to share
+# merge decisions with collaborators. Run after a curation session.
+export-seeds:
+    @mkdir -p seeds/relational seeds/spatial
+    @just manage dumpdata \
+        addresses entities buildings time_ranges overlays \
+        --indent 2 --natural-foreign --natural-primary \
+        -o seeds/relational/combined.json
+    docker compose exec -T db pg_dump -U postgres --data-only \
+        -t parcels    -d greenwood_history > seeds/spatial/parcels.sql
+    docker compose exec -T db pg_dump -U postgres --data-only \
+        -t quarters   -d greenwood_history > seeds/spatial/quarters.sql
+    docker compose exec -T db pg_dump -U postgres --data-only \
+        -t townships  -d greenwood_history > seeds/spatial/townships.sql

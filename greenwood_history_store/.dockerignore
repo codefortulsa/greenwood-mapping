@@ -91,3 +91,13 @@ target/
 # Other app projects
 pwa/
 app/
+
+# LFS-tracked source data (bind-mount at runtime; don't inflate image)
+data/
+
+# Curated seeds (bind-mount at runtime)
+seeds/
+
+# Scratch
+temp.py
+notebooks/.ipynb_checkpoints/

@@ -1,57 +1,27 @@
-// For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
-// https://github.com/microsoft/vscode-dev-containers/tree/v0.245.0/containers/python-3-postgres
-// Update the VARIANT arg in docker-compose.yml to pick a Python version
+// VS Code / Codespaces dev container.
+// The real compose file + Dockerfile live at the project root; this just
+// points VS Code at them so the in-container dev experience uses the same
+// image everyone else gets.
 {
-	"name": "Greenwood History Store",
-	"dockerComposeFile": "docker-compose.yaml",
-	"service": "app",
-	"workspaceFolder": "/app",
-	"features": {
-		"ghcr.io/devcontainers-contrib/features/poetry:2": {
-			"version": "latest"
-		}
-	},
-	// Configure tool-specific properties.
-	"customizations": {
-		// Configure properties specific to VS Code.
-		"vscode": {
-			// Set *default* container specific settings.json values on container create.
-			"settings": { 
-				"python.defaultInterpreterPath": "/app/.venv/bin/python",
-				// // "python.defaultInterpreterPath": "/usr/local/bin/python",
-				"python.linting.enabled": true,
-				"python.linting.pylintEnabled": false,
-				"python.formatting.autopep8Path": "/usr/local/py-utils/bin/autopep8",
-				"python.formatting.blackPath": "/usr/local/py-utils/bin/black",
-				"python.formatting.yapfPath": "/usr/local/py-utils/bin/yapf",
-				"python.linting.banditPath": "/usr/local/py-utils/bin/bandit",
-				"python.linting.flake8Path": "/usr/local/py-utils/bin/flake8",
-				"python.linting.mypyPath": "/usr/local/py-utils/bin/mypy",
-				"python.linting.pycodestylePath": "/usr/local/py-utils/bin/pycodestyle",
-				"python.linting.pydocstylePath": "/usr/local/py-utils/bin/pydocstyle",
-				"python.linting.pylintPath": "/usr/local/py-utils/bin/pylint",
-				"python.testing.pytestPath": "/usr/local/py-utils/bin/pytest"
-			},
-			
-			// Add the IDs of extensions you want installed when the container is created.
-			"extensions": [
-				"ms-python.python",
-				"ms-python.vscode-pylance",
-				"ms-azuretools.vscode-docker",
-				"bungcip.better-toml",
-				"streetsidesoftware.code-spell-checker",
-				"ms-python.black-formatter"
-			]
-		}
-	},
-
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// This can be used to network with other containers or the host.
-	"forwardPorts": [8000, 8001, 5432, 6379],
-
-	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "poetry install"
-
-	// Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
-	// "remoteUser": "vscode"
+    "name": "Greenwood History Store",
+    "dockerComposeFile": "../docker-compose.yaml",
+    "service": "app",
+    "workspaceFolder": "/app",
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "python.defaultInterpreterPath": "/usr/local/bin/python"
+            },
+            "extensions": [
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "ms-python.black-formatter",
+                "ms-azuretools.vscode-docker",
+                "tamasfe.even-better-toml",
+                "streetsidesoftware.code-spell-checker"
+            ]
+        }
+    },
+    "forwardPorts": [8000, 3000, 5432, 6379],
+    "postCreateCommand": "poetry install"
 }

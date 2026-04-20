@@ -8,7 +8,6 @@ import pghistory
 
 
 @pghistory.track(
-    pghistory.Snapshot(),
     model_name="EntityEvent",
     fields=("name", "meta", "canonical"),
     context_field=pghistory.ContextForeignKey(related_query_name="entity_events"),
@@ -37,7 +36,6 @@ class Entity(PolymorphicModel):
 
 
 @pghistory.track(
-    pghistory.Snapshot(),
     model_name="PersonEvent",
     fields=("name_parsed",),
     context_field=pghistory.ContextForeignKey(related_query_name="person_events"),
@@ -83,7 +81,6 @@ class Person(Entity):
 
 
 @pghistory.track(
-    pghistory.Snapshot(),
     model_name="BusinessEvent",
     fields=("proprietor",),
     context_field=pghistory.ContextForeignKey(related_query_name="person_events"),

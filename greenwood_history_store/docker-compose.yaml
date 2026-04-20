@@ -1,0 +1,79 @@
+name: greenwood
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/django/Dockerfile
+    image: greenwood-app:local
+    container_name: greenwood_app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+      - .:/app:cached
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgis://postgres:postgres@db:5432/greenwood_history
+      CACHE_URL: django-redis://redis/0
+      DJANGO_SETTINGS_MODULE: greenwood_history.config
+      DJANGO_CONFIGURATION: Dev
+      # Dev default; .env overrides. Never rely on this in prod.
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-dev-insecure-do-not-use-in-prod}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,0.0.0.0}
+    ports:
+      - "8000:8000"
+
+  db:
+    # postgis/postgis doesn't ship arm64 (as of 2026-04) — run under
+    # amd64 emulation on Apple Silicon. Swap to a native-arm64 community
+    # image (e.g. imresamu/postgis) if emulation is too slow in practice.
+    platform: linux/amd64
+    image: postgis/postgis:17-3.5-alpine
+    container_name: greenwood_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: greenwood_history
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d greenwood_history"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:8-alpine
+    container_name: greenwood_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+  martin:
+    image: ghcr.io/maplibre/martin:latest
+    container_name: greenwood_martin
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./docker/martin:/config:ro
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/greenwood_history
+    command: ["--config", "/config/config.yaml", "--listen-addresses", "0.0.0.0:3000"]
+    ports:
+      - "3000:3000"
+
+volumes:
+  db-data:
+    name: greenwood_db-data

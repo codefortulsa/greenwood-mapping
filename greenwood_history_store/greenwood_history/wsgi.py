@@ -13,7 +13,6 @@ from configurations import importer
 from django.core.wsgi import get_wsgi_application
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "greenwood_history.config")
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "greenwood_history.settings")
 
 importer.install()
 

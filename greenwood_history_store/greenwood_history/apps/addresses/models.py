@@ -50,7 +50,8 @@ def silent(type: models.TextChoices, value):
 
 
 street_pattern = re.compile(
-    r"^(?i)(?P<street_name>[a-z]+)(?:-(?P<direction1>N|S|E|W))?(?:\s+(?P<street_type>[A-Za-z]+\.?)?)?(?:-(?P<direction2>N|S|E|W)?)?$"
+    r"^(?P<street_name>[a-z]+)(?:-(?P<direction1>N|S|E|W))?(?:\s+(?P<street_type>[A-Za-z]+\.?)?)?(?:-(?P<direction2>N|S|E|W)?)?$",
+    re.IGNORECASE,
 )
 
 

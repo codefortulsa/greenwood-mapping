@@ -1,3 +1,6 @@
+# Local env (use .env.example as template)
+.env
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

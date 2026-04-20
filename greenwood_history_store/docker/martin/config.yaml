@@ -1,0 +1,18 @@
+# Martin tile server config.
+# https://maplibre.org/martin/config-file.html
+#
+# Auto-publishes PostGIS functions (not raw tables) so we expose only
+# curated tile sources. Add function sources (e.g. `parcel_tiles(z,x,y,...)`)
+# by creating PostGIS functions and letting auto_publish pick them up,
+# or by listing them explicitly under `postgres.functions`.
+
+postgres:
+  connection_string: ${DATABASE_URL}
+  pool_size: 5
+  keep_alive: 75
+  auto_publish:
+    from_schemas: public
+    functions: true
+    tables: false
+
+cache_size_mb: 256

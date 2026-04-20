@@ -133,9 +133,6 @@ class Common(Configuration):
     # See: https://docs.djangoproject.com/en/dev/ref/settings/#use-i18n
     USE_I18N = True
 
-    # See: https://docs.djangoproject.com/en/dev/ref/settings/#use-l10n
-    USE_L10N = True
-
     # See: https://docs.djangoproject.com/en/dev/ref/settings/#use-tz
     USE_TZ = True
     # END GENERAL CONFIGURATION
@@ -245,7 +242,6 @@ class Common(Configuration):
             },
             "rich": {
                 "datefmt": "[%X]",
-                "rich_tracebacks": True
             }
         },
         "handlers": {
@@ -259,6 +255,7 @@ class Common(Configuration):
                 "filters": ["require_debug_true"],
                 "formatter": "rich",
                 "level": "DEBUG",
+                "rich_tracebacks": True,
             },
             "django.server": {
                 "level": "INFO",
