@@ -1,78 +1,32 @@
-import { useState, useMemo } from "react"
+import { useState } from "react"
 import { Map, Source, Layer, NavigationControl, ScaleControl } from "react-map-gl/maplibre"
-import type { StyleSpecification } from "maplibre-gl"
+import type { StyleSpecification, FilterSpecification } from "maplibre-gl"
 
 const MARTIN_URL = import.meta.env.VITE_MARTIN_URL ?? "http://localhost:3000"
 
+// Single Martin source. Each on-screen layer filters by MapFeature.kind.
+const FEATURE_SOURCE = "overlays_mapfeature"
+
 type LayerDef = {
   id: string
-  table: string
+  kind: string
   label: string
   color: string
-  kind: "fill" | "line" | "outline"
+  render: "fill" | "line" | "outline"
   default: boolean
 }
 
 const LAYERS: LayerDef[] = [
-  {
-    id: "overlays_historicalshape",
-    table: "overlays_historicalshape",
-    label: "1921 destruction zone (curated)",
-    color: "#ef4444",
-    kind: "fill",
-    default: true,
-  },
-  {
-    id: "poi_footprints",
-    table: "poi_footprints",
-    label: "Featured POI footprints",
-    color: "#f97316",
-    kind: "fill",
-    default: true,
-  },
-  {
-    id: "greenwood_buildings",
-    table: "greenwood_buildings",
-    label: "Greenwood historic buildings",
-    color: "#374151",
-    kind: "fill",
-    default: true,
-  },
-  {
-    id: "greenwood_roads",
-    table: "greenwood_roads",
-    label: "Greenwood historic roads",
-    color: "#92400e",
-    kind: "line",
-    default: true,
-  },
-  {
-    id: "parcels",
-    table: "parcels",
-    label: "Tulsa County parcels (modern)",
-    color: "#4b5563",
-    kind: "outline",
-    default: false,
-  },
-  {
-    id: "quarters",
-    table: "quarters",
-    label: "PLSS quarter sections",
-    color: "#6366f1",
-    kind: "outline",
-    default: false,
-  },
-  {
-    id: "tulsa_building_footprints",
-    table: "tulsa_building_footprints",
-    label: "All Tulsa building footprints (modern)",
-    color: "#9ca3af",
-    kind: "outline",
-    default: false,
-  },
+  { id: "destruction_zone",          kind: "destruction_zone",          label: "1921 destruction zone",      color: "#ef4444", render: "fill",    default: true },
+  { id: "poi_footprint",             kind: "poi_footprint",             label: "Featured POI footprints",    color: "#f97316", render: "fill",    default: true },
+  { id: "historical_building",       kind: "historical_building",       label: "Historical buildings",       color: "#374151", render: "fill",    default: true },
+  { id: "historical_road",           kind: "historical_road",           label: "Historical roads",           color: "#92400e", render: "line",    default: true },
+  { id: "parcel",                    kind: "parcel",                    label: "Parcels (modern)",           color: "#4b5563", render: "outline", default: false },
+  { id: "quarter_section",           kind: "quarter_section",           label: "PLSS quarter sections",      color: "#6366f1", render: "outline", default: false },
+  { id: "township",                  kind: "township",                  label: "PLSS townships",             color: "#8b5cf6", render: "outline", default: false },
+  { id: "modern_building_footprint", kind: "modern_building_footprint", label: "Modern building footprints", color: "#9ca3af", render: "outline", default: false },
 ]
 
-// OSM raster base. Free for demo; swap for a vector basemap later.
 const baseStyle: StyleSpecification = {
   version: 8,
   sources: {
@@ -85,23 +39,19 @@ const baseStyle: StyleSpecification = {
     },
   },
   layers: [
-    {
-      id: "osm-base",
-      type: "raster",
-      source: "osm",
-    },
+    { id: "osm-base", type: "raster", source: "osm" },
   ],
 }
+
+const kindFilter = (kind: string): FilterSpecification =>
+  ["==", ["get", "kind"], kind]
 
 export default function App() {
   const [visible, setVisible] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(LAYERS.map((l) => [l.id, l.default])),
   )
 
-  const toggle = (id: string) =>
-    setVisible((v) => ({ ...v, [id]: !v[id] }))
-
-  const sources = useMemo(() => LAYERS, [])
+  const toggle = (id: string) => setVisible((v) => ({ ...v, [id]: !v[id] }))
 
   return (
     <>
@@ -109,17 +59,16 @@ export default function App() {
         <h3>Layers</h3>
         {LAYERS.map((l) => (
           <label key={l.id}>
-            <input
-              type="checkbox"
-              checked={visible[l.id]}
-              onChange={() => toggle(l.id)}
+            <input type="checkbox" checked={visible[l.id]} onChange={() => toggle(l.id)} />
+            <span
+              className="swatch"
+              style={{ background: l.color, opacity: l.render === "outline" ? 0.3 : 0.55 }}
             />
-            <span className="swatch" style={{ background: l.color, opacity: l.kind === "outline" ? 0.3 : 0.55 }} />
             {l.label}
           </label>
         ))}
         <div style={{ marginTop: 6, fontSize: 11, color: "#666" }}>
-          Tiles served by Martin at <code>{MARTIN_URL}</code>
+          Martin: <code>{MARTIN_URL}/{FEATURE_SOURCE}</code>
         </div>
       </div>
 
@@ -131,49 +80,56 @@ export default function App() {
         <NavigationControl position="top-right" />
         <ScaleControl position="bottom-left" />
 
-        {sources.map((l) => (
-          <Source
-            key={l.id}
-            id={l.id}
-            type="vector"
-            url={`${MARTIN_URL}/${l.table}`}
-          >
-            {l.kind === "fill" && (
+        <Source id={FEATURE_SOURCE} type="vector" url={`${MARTIN_URL}/${FEATURE_SOURCE}`}>
+          {LAYERS.map((l) => {
+            const filter = kindFilter(l.kind)
+            const visibility = visible[l.id] ? "visible" : "none"
+            if (l.render === "fill") {
+              return (
+                <Layer
+                  key={l.id}
+                  id={l.id}
+                  type="fill"
+                  source={FEATURE_SOURCE}
+                  source-layer={FEATURE_SOURCE}
+                  filter={filter}
+                  paint={{
+                    "fill-color": l.color,
+                    "fill-opacity": 0.45,
+                    "fill-outline-color": l.color,
+                  }}
+                  layout={{ visibility }}
+                />
+              )
+            }
+            if (l.render === "line") {
+              return (
+                <Layer
+                  key={l.id}
+                  id={l.id}
+                  type="line"
+                  source={FEATURE_SOURCE}
+                  source-layer={FEATURE_SOURCE}
+                  filter={filter}
+                  paint={{ "line-color": l.color, "line-width": 2 }}
+                  layout={{ visibility }}
+                />
+              )
+            }
+            return (
               <Layer
-                id={`${l.id}-fill`}
-                type="fill"
-                source={l.id}
-                source-layer={l.table}
-                paint={{
-                  "fill-color": l.color,
-                  "fill-opacity": 0.45,
-                  "fill-outline-color": l.color,
-                }}
-                layout={{ visibility: visible[l.id] ? "visible" : "none" }}
-              />
-            )}
-            {l.kind === "line" && (
-              <Layer
-                id={`${l.id}-line`}
+                key={l.id}
+                id={l.id}
                 type="line"
-                source={l.id}
-                source-layer={l.table}
-                paint={{ "line-color": l.color, "line-width": 2 }}
-                layout={{ visibility: visible[l.id] ? "visible" : "none" }}
-              />
-            )}
-            {l.kind === "outline" && (
-              <Layer
-                id={`${l.id}-outline`}
-                type="line"
-                source={l.id}
-                source-layer={l.table}
+                source={FEATURE_SOURCE}
+                source-layer={FEATURE_SOURCE}
+                filter={filter}
                 paint={{ "line-color": l.color, "line-width": 0.5 }}
-                layout={{ visibility: visible[l.id] ? "visible" : "none" }}
+                layout={{ visibility }}
               />
-            )}
-          </Source>
-        ))}
+            )
+          })}
+        </Source>
       </Map>
     </>
   )

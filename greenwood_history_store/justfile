@@ -77,51 +77,24 @@ lint:
 
 # -- Data pipelines ---------------------------------------------------
 
-# Load a single spatial source (shp or geojson) into a named
-# PostGIS table using ogr2ogr inside the app container.
-#   Example: `just import-one data/shape/Quarters/quarter.shp quarters`
-import-one path table:
-    docker compose run --rm app ogr2ogr \
-      -f PostgreSQL \
-      "PG:host=db user=postgres password=postgres dbname=greenwood_history" \
-      -nln {{table}} \
-      -lco GEOMETRY_NAME=geom \
-      -lco FID=gid \
-      -nlt PROMOTE_TO_MULTI \
-      -t_srs EPSG:4326 \
-      -overwrite \
-      /app/{{path}}
-
-# Load all county shapefiles we ship under data/shape/ and all
-# greenwood_assets GeoJSON/JSON feature collections into unmanaged
-# PostGIS tables. Target tables auto-publish via Martin.
-import-spatial:
-    @echo "=== shapefiles ==="
-    @just import-one data/shape/Parcels_20220929/PARCELS220929.shp parcels
-    @just import-one data/shape/Quarters/quarter.shp quarters
-    @just import-one data/shape/Township/township.shp townships
-    @echo "=== geojson / json ==="
-    @just import-one data/greenwood_assets/tulsa-burned-area.geojson tulsa_burned_area
-    @just import-one data/greenwood_assets/tulsa-building-footprints.geojson tulsa_building_footprints
-    @just import-one data/greenwood_assets/Greenwood_Buildings.json greenwood_buildings
-    @just import-one data/greenwood_assets/Greenwood_roads.json greenwood_roads
-    @just import-one data/greenwood_assets/poi-footprints.geojson poi_footprints
-    @echo "=== done. Restart martin to pick up new tables:  just restart martin"
+# Import all known GeoJSON + shapefile sources into overlays.MapFeature.
+# Idempotent — keyed on (source, source_id); re-running updates in place.
+# Sources live in data/greenwood_assets/ and data/shape/; the source list
+# is the SOURCES table in overlays/management/commands/import_map_features.py.
+import-map-features *args:
+    @just manage import_map_features {{args}}
 
 # QUICK CONTRIBUTOR BOOTSTRAP: spin up a seeded dev DB in ~30s.
 # Does NOT re-run the import pipeline — loads pre-curated fixtures.
+# Everything is Django-managed (no unmanaged tables), so a single
+# loaddata call restores the full state.
 bootstrap:
     docker compose up -d db redis
     @just manage migrate
-    @if compgen -G "seeds/relational/*.json" > /dev/null; then \
-        just manage loaddata seeds/relational/*.json; \
+    @if compgen -G "seeds/*.json" > /dev/null; then \
+        just manage loaddata seeds/*.json; \
     else \
-        echo "No seeds yet — run \`just reimport\` or wait for seeds/ to be curated."; \
-    fi
-    @if compgen -G "seeds/spatial/*.sql" > /dev/null; then \
-        for f in seeds/spatial/*.sql; do \
-          docker compose exec -T db psql -U postgres -d greenwood_history < "$f"; \
-        done; \
+        echo "No seeds yet — run \`just reimport\` then \`just export-seeds\`."; \
     fi
 
 # FULL RE-IMPORT FROM RAW SOURCES. Wipes the DB first. Slow.
@@ -129,24 +102,18 @@ bootstrap:
 reimport: prune
     docker compose up -d db redis
     @just manage migrate
-    @just import-spatial
+    @just import-map-features
     # Polk xlsx import — add once the pipeline is fixed
     # @just manage import_polk
     @just manage import_data
-    # GeoJSON overlays — add once the management command lands
-    # @just manage import_geojson data/greenwood_assets/
 
 # Export curated DB state back to seeds/. Commit the diff to share
-# merge decisions with collaborators. Run after a curation session.
+# merge/curation decisions with collaborators. Run after a curation
+# session. No spatial pg_dump needed — all geometry is in Django
+# models now, so `dumpdata` covers everything.
 export-seeds:
-    @mkdir -p seeds/relational seeds/spatial
+    @mkdir -p seeds
     @just manage dumpdata \
         addresses entities buildings time_ranges overlays \
         --indent 2 --natural-foreign --natural-primary \
-        -o seeds/relational/combined.json
-    docker compose exec -T db pg_dump -U postgres --data-only \
-        -t parcels    -d greenwood_history > seeds/spatial/parcels.sql
-    docker compose exec -T db pg_dump -U postgres --data-only \
-        -t quarters   -d greenwood_history > seeds/spatial/quarters.sql
-    docker compose exec -T db pg_dump -U postgres --data-only \
-        -t townships  -d greenwood_history > seeds/spatial/townships.sql
+        -o seeds/combined.json

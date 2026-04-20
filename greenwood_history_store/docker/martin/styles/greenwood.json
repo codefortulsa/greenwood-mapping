@@ -1,6 +1,6 @@
 {
   "version": 8,
-  "name": "Greenwood (OSM + Martin vector)",
+  "name": "Greenwood (OSM + overlays_mapfeature)",
   "center": [-95.989, 36.16],
   "zoom": 15,
   "sources": {
@@ -11,47 +11,75 @@
       "attribution": "© OpenStreetMap contributors",
       "maxzoom": 19
     },
-    "tulsa_burned_area": { "type": "vector", "url": "http://localhost:3000/tulsa_burned_area" },
-    "poi_footprints": { "type": "vector", "url": "http://localhost:3000/poi_footprints" },
-    "greenwood_buildings": { "type": "vector", "url": "http://localhost:3000/greenwood_buildings" },
-    "greenwood_roads": { "type": "vector", "url": "http://localhost:3000/greenwood_roads" },
-    "tulsa_building_footprints": { "type": "vector", "url": "http://localhost:3000/tulsa_building_footprints" }
+    "overlays_mapfeature": {
+      "type": "vector",
+      "url": "http://localhost:3000/overlays_mapfeature"
+    }
   },
   "layers": [
     { "id": "osm-base", "type": "raster", "source": "osm" },
     {
-      "id": "tulsa_building_footprints-outline",
+      "id": "township-outline",
       "type": "line",
-      "source": "tulsa_building_footprints",
-      "source-layer": "tulsa_building_footprints",
-      "paint": { "line-color": "#6b7280", "line-width": 0.5 }
+      "source": "overlays_mapfeature",
+      "source-layer": "overlays_mapfeature",
+      "filter": ["==", ["get", "kind"], "township"],
+      "paint": { "line-color": "#8b5cf6", "line-width": 0.6, "line-opacity": 0.4 }
     },
     {
-      "id": "greenwood_buildings-fill",
+      "id": "quarter_section-outline",
+      "type": "line",
+      "source": "overlays_mapfeature",
+      "source-layer": "overlays_mapfeature",
+      "filter": ["==", ["get", "kind"], "quarter_section"],
+      "paint": { "line-color": "#6366f1", "line-width": 0.5, "line-opacity": 0.4 }
+    },
+    {
+      "id": "parcel-outline",
+      "type": "line",
+      "source": "overlays_mapfeature",
+      "source-layer": "overlays_mapfeature",
+      "filter": ["==", ["get", "kind"], "parcel"],
+      "paint": { "line-color": "#4b5563", "line-width": 0.5, "line-opacity": 0.6 }
+    },
+    {
+      "id": "modern_building_footprint-outline",
+      "type": "line",
+      "source": "overlays_mapfeature",
+      "source-layer": "overlays_mapfeature",
+      "filter": ["==", ["get", "kind"], "modern_building_footprint"],
+      "paint": { "line-color": "#9ca3af", "line-width": 0.5 }
+    },
+    {
+      "id": "historical_building-fill",
       "type": "fill",
-      "source": "greenwood_buildings",
-      "source-layer": "greenwood_buildings",
+      "source": "overlays_mapfeature",
+      "source-layer": "overlays_mapfeature",
+      "filter": ["==", ["get", "kind"], "historical_building"],
       "paint": { "fill-color": "#374151", "fill-opacity": 0.4, "fill-outline-color": "#111827" }
     },
     {
-      "id": "greenwood_roads-line",
+      "id": "historical_road-line",
       "type": "line",
-      "source": "greenwood_roads",
-      "source-layer": "greenwood_roads",
+      "source": "overlays_mapfeature",
+      "source-layer": "overlays_mapfeature",
+      "filter": ["==", ["get", "kind"], "historical_road"],
       "paint": { "line-color": "#92400e", "line-width": 2 }
     },
     {
-      "id": "tulsa_burned_area-fill",
+      "id": "destruction_zone-fill",
       "type": "fill",
-      "source": "tulsa_burned_area",
-      "source-layer": "tulsa_burned_area",
+      "source": "overlays_mapfeature",
+      "source-layer": "overlays_mapfeature",
+      "filter": ["==", ["get", "kind"], "destruction_zone"],
       "paint": { "fill-color": "#ef4444", "fill-opacity": 0.35, "fill-outline-color": "#991b1b" }
     },
     {
-      "id": "poi_footprints-fill",
+      "id": "poi_footprint-fill",
       "type": "fill",
-      "source": "poi_footprints",
-      "source-layer": "poi_footprints",
+      "source": "overlays_mapfeature",
+      "source-layer": "overlays_mapfeature",
+      "filter": ["==", ["get", "kind"], "poi_footprint"],
       "paint": { "fill-color": "#f97316", "fill-opacity": 0.65, "fill-outline-color": "#9a3412" }
     }
   ]
