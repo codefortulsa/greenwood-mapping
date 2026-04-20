@@ -1,6 +1,15 @@
 # Source data (city directories)
 *.xlsx filter=lfs diff=lfs merge=lfs -text
 
+# Vector data
+*.geojson filter=lfs diff=lfs merge=lfs -text
+
+# Bulk source-data assets under data/greenwood_assets/ — LFS regardless
+# of extension so future drops (json, csv, mbtiles, pmtiles, etc.) stay
+# consistent with the rest of the data/ tree.
+greenwood_history_store/data/greenwood_assets/*.json filter=lfs diff=lfs merge=lfs -text
+greenwood_history_store/data/greenwood_assets/*.csv filter=lfs diff=lfs merge=lfs -text
+
 # Shapefile components
 *.shp filter=lfs diff=lfs merge=lfs -text
 *.dbf filter=lfs diff=lfs merge=lfs -text
