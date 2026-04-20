@@ -79,6 +79,7 @@ class Common(Configuration):
         "addresses",
         "buildings",
         "entities",
+        "time_ranges",
         "shapes",
     )
 
