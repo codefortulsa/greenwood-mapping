@@ -93,6 +93,10 @@ class Street(models.Model):
     def __str__(self) -> str:
         return f"{self.name} {silent(StreetTypes, self.type)} {silent(Directions, self.direction)}".strip()
 
+    @property
+    def short_name(self):
+        return f"{self.name} {self.type} {self.direction}".strip()
+
     @classmethod
     def get_or_create_from_name(cls, name: str):
         orig_name = name
@@ -146,3 +150,7 @@ class Address(models.Model):
         )
 
         # outline = models.PolygonField(_("Outline"), blank=True, null=True)
+
+
+# class Plot(models.Model):
+#     outline = models.PolygonField(_("Outline"), blank=True, null=True)

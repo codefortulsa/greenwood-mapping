@@ -11,11 +11,20 @@ class AddressViewSet(viewsets.ModelViewSet):
 
     queryset = Address.objects.all()
     serializer_class = AddressSerializer
+    filterset_fields = [
+        "number",
+        "number_additional",
+        "street",
+        "street__name",
+        "street__type",
+        "street__direction",
+    ]
+    search_fields = ("number", "street__name")
 
 
 class StreetViewSet(viewsets.ModelViewSet):
     """
-    API endpoint that allows Streetses to be viewed or edited.
+    API endpoint that allows Streets to be viewed or edited.
     """
 
     queryset = Street.objects.all()
