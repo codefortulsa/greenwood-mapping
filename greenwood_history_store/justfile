@@ -77,17 +77,36 @@ lint:
 
 # -- Data pipelines ---------------------------------------------------
 
-# Load county shapefiles into unmanaged PostGIS tables via shp2pgsql.
-# Requires shp2pgsql on the HOST (brew install postgis) because it
-# streams straight into the db container's psql.
-import-shapes:
-    @echo "Loading parcels, quarters, townships shapefiles..."
-    shp2pgsql -d -D -I data/shape/Parcels_20220929/PARCELS220929.shp parcels | \
-      docker compose exec -T db psql -U postgres -d greenwood_history
-    shp2pgsql -d -D -I data/shape/Quarters/quarter.shp quarters | \
-      docker compose exec -T db psql -U postgres -d greenwood_history
-    shp2pgsql -d -D -I data/shape/Township/township.shp townships | \
-      docker compose exec -T db psql -U postgres -d greenwood_history
+# Load a single spatial source (shp or geojson) into a named
+# PostGIS table using ogr2ogr inside the app container.
+#   Example: `just import-one data/shape/Quarters/quarter.shp quarters`
+import-one path table:
+    docker compose run --rm app ogr2ogr \
+      -f PostgreSQL \
+      "PG:host=db user=postgres password=postgres dbname=greenwood_history" \
+      -nln {{table}} \
+      -lco GEOMETRY_NAME=geom \
+      -lco FID=gid \
+      -nlt PROMOTE_TO_MULTI \
+      -t_srs EPSG:4326 \
+      -overwrite \
+      /app/{{path}}
+
+# Load all county shapefiles we ship under data/shape/ and all
+# greenwood_assets GeoJSON/JSON feature collections into unmanaged
+# PostGIS tables. Target tables auto-publish via Martin.
+import-spatial:
+    @echo "=== shapefiles ==="
+    @just import-one data/shape/Parcels_20220929/PARCELS220929.shp parcels
+    @just import-one data/shape/Quarters/quarter.shp quarters
+    @just import-one data/shape/Township/township.shp townships
+    @echo "=== geojson / json ==="
+    @just import-one data/greenwood_assets/tulsa-burned-area.geojson tulsa_burned_area
+    @just import-one data/greenwood_assets/tulsa-building-footprints.geojson tulsa_building_footprints
+    @just import-one data/greenwood_assets/Greenwood_Buildings.json greenwood_buildings
+    @just import-one data/greenwood_assets/Greenwood_roads.json greenwood_roads
+    @just import-one data/greenwood_assets/poi-footprints.geojson poi_footprints
+    @echo "=== done. Restart martin to pick up new tables:  just restart martin"
 
 # QUICK CONTRIBUTOR BOOTSTRAP: spin up a seeded dev DB in ~30s.
 # Does NOT re-run the import pipeline — loads pre-curated fixtures.
@@ -110,7 +129,7 @@ bootstrap:
 reimport: prune
     docker compose up -d db redis
     @just manage migrate
-    @just import-shapes
+    @just import-spatial
     # Polk xlsx import — add once the pipeline is fixed
     # @just manage import_polk
     @just manage import_data

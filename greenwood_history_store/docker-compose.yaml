@@ -71,7 +71,16 @@ services:
       - ./docker/martin:/config:ro
     environment:
       DATABASE_URL: postgres://postgres:postgres@db:5432/greenwood_history
-    command: ["--config", "/config/config.yaml", "--listen-addresses", "0.0.0.0:3000"]
+    # `--webui enable-for-all` exposes Martin's built-in map inspector at
+    # http://localhost:3000/  — useful for checking tile sources load.
+    # Safe for dev only; disable or gate in prod.
+    command:
+      - "--config"
+      - "/config/config.yaml"
+      - "--listen-addresses"
+      - "0.0.0.0:3000"
+      - "--webui"
+      - "enable-for-all"
     ports:
       - "3000:3000"
 

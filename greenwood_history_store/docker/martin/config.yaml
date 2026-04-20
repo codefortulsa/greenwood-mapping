@@ -13,6 +13,13 @@ postgres:
   auto_publish:
     from_schemas: public
     functions: true
-    tables: false
+    tables: true
 
 cache_size_mb: 256
+
+# Styles served from /config/styles/ — discoverable in the webui.
+# Open http://localhost:3000/ and pick a style to view vector sources
+# layered on an OSM basemap.
+styles:
+  paths:
+    - /config/styles

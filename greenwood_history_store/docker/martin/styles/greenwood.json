@@ -1,0 +1,58 @@
+{
+  "version": 8,
+  "name": "Greenwood (OSM + Martin vector)",
+  "center": [-95.989, 36.16],
+  "zoom": 15,
+  "sources": {
+    "osm": {
+      "type": "raster",
+      "tiles": ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+      "tileSize": 256,
+      "attribution": "© OpenStreetMap contributors",
+      "maxzoom": 19
+    },
+    "tulsa_burned_area": { "type": "vector", "url": "http://localhost:3000/tulsa_burned_area" },
+    "poi_footprints": { "type": "vector", "url": "http://localhost:3000/poi_footprints" },
+    "greenwood_buildings": { "type": "vector", "url": "http://localhost:3000/greenwood_buildings" },
+    "greenwood_roads": { "type": "vector", "url": "http://localhost:3000/greenwood_roads" },
+    "tulsa_building_footprints": { "type": "vector", "url": "http://localhost:3000/tulsa_building_footprints" }
+  },
+  "layers": [
+    { "id": "osm-base", "type": "raster", "source": "osm" },
+    {
+      "id": "tulsa_building_footprints-outline",
+      "type": "line",
+      "source": "tulsa_building_footprints",
+      "source-layer": "tulsa_building_footprints",
+      "paint": { "line-color": "#6b7280", "line-width": 0.5 }
+    },
+    {
+      "id": "greenwood_buildings-fill",
+      "type": "fill",
+      "source": "greenwood_buildings",
+      "source-layer": "greenwood_buildings",
+      "paint": { "fill-color": "#374151", "fill-opacity": 0.4, "fill-outline-color": "#111827" }
+    },
+    {
+      "id": "greenwood_roads-line",
+      "type": "line",
+      "source": "greenwood_roads",
+      "source-layer": "greenwood_roads",
+      "paint": { "line-color": "#92400e", "line-width": 2 }
+    },
+    {
+      "id": "tulsa_burned_area-fill",
+      "type": "fill",
+      "source": "tulsa_burned_area",
+      "source-layer": "tulsa_burned_area",
+      "paint": { "fill-color": "#ef4444", "fill-opacity": 0.35, "fill-outline-color": "#991b1b" }
+    },
+    {
+      "id": "poi_footprints-fill",
+      "type": "fill",
+      "source": "poi_footprints",
+      "source-layer": "poi_footprints",
+      "paint": { "fill-color": "#f97316", "fill-opacity": 0.65, "fill-outline-color": "#9a3412" }
+    }
+  ]
+}
