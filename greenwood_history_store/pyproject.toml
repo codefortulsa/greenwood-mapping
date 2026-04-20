@@ -4,36 +4,36 @@ version = "0.1.0"
 description = "Data store of events/plots/people in greenwood"
 authors = ["Greenwood mapping team"]
 license = "MIT"
+package-mode = false
 
 [tool.poetry.dependencies]
-python = "^3.10"
-Django = "^4.2"
-django-configurations = {version = "^2.3.2", extras = ["cache", "database", "email", "search"]}
-rich = "^12.5.1"
-pydantic = "^1.9.2"
-django-pydantic-field = "^0.2.3"
-django-polymorphic = "^3.1.0"
-nameparser = "^1.1.1"
-djangorestframework = "^3.14.0"
-djangorestframework-gis = "^1.0"
-django-extensions = "^3.2.1"
-django-filter = "^23.1"
-adrf = "^0.1.1"
-asyncer = "^0.0.2"
-petl = {version = "^1.7.12", extras = ["xlsx"]}
-django-pghistory = "^2.7.0"
+python = "^3.12"
+Django = "^5.2"
+django-configurations = {version = "^2.5", extras = ["cache", "database", "email", "search"]}
+rich = "^15"
+pydantic = "^2"
+django-pydantic-field = "^0.5"
+django-polymorphic = "^4"
+nameparser = "^1.1"
+djangorestframework = "^3.17"
+django-extensions = "^4.1"
+django-filter = "^25"
+adrf = "^0.1.12"
+asyncer = "^0.0.17"
+petl = {version = "^1.7", extras = ["xlsx"]}
+django-pghistory = "^3.9"
+django-pgtrigger = "^4.17"
 django-rest-polymorphic = "^0.1.10"
-psycopg2 = "^2.9.7"
+psycopg = {version = "^3.3", extras = ["binary"]}
 
 [tool.poetry.group.dev.dependencies]
-black = "^22.6.0"
-isort = "^5.10.1"
-pdbr = "^0.7.2"
-pytest = "^7.2.2"
-pytest-django = {git = "https://github.com/pytest-dev/pytest-django.git"}
-ipykernel = "^6.22.0"
-setuptools = "^67.6.1"
-model-bakery = "^1.11.0"
+black = "^26"
+isort = "^8"
+pdbr = "^0.9"
+pytest = "^9"
+pytest-django = "^4.12"
+ipykernel = "^7"
+model-bakery = "^1.23"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -43,21 +43,18 @@ build-backend = "poetry.core.masonry.api"
 exclude = '/(\.eggs|\.git|\.mypy_cache|\.pytest_cache|\.tox|venv|\.venv|build|dist|migrations|htmlcov)/'
 include = '\.pyi?$'
 line-length = 99
-target-version = ['py38']
+target-version = ['py312']
 
 [tool.isort]
-# https://github.com/timothycrosley/isort
-# https://github.com/timothycrosley/isort/wiki/isort-Settings
+profile = "black"
 line_length = 99
-indent = "    "
 multi_line_output = 3
 include_trailing_comma = true
 force_grid_wrap = 0
 skip_glob = "*/migrations/*"
-# known_local_folder = ["greenwood/"]
 
 [tool.pdbr]
-store_history=".pdbr_history"
+store_history = ".pdbr_history"
 style = "yellow"
 use_traceback = true
 theme = "friendly"

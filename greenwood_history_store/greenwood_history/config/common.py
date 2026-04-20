@@ -69,10 +69,8 @@ class Common(Configuration):
         "django_extensions",
         "django_filters",
         "rest_framework",
-        "rest_framework_gis",
         "pghistory",
         "pgtrigger",
-        # "pgconnection",
     )
 
     LOCAL_APPS = (
