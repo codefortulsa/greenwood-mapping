@@ -1,1 +1,4 @@
 map_mvp/
+
+# Claude Code local overrides (shared settings/skills/docs are committed)
+.claude/settings.local.json
